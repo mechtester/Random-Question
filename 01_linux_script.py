@@ -38,7 +38,7 @@ class QuestionApp:
         self.remaining_label = tk.Label(root, text="", font=("Ubuntu Mono", 14))
         self.remaining_label.pack()
         self.question_display = tk.Label(root, text=""":::: Interview Preparation ::::
-** Created By :: Vigneshkumar ** \U0001F60E""", font=("Ubuntu Mono", 24),
+ \U0001F60E""", font=("Ubuntu Mono", 24),
                                          wraplength=900)
         self.question_display.pack(expand=True)
 
@@ -46,27 +46,58 @@ class QuestionApp:
         button_frame = tk.Frame(root)
         button_frame.pack()
 
+        #Instructions
         self.instructions_button = tk.Button(button_frame, text="Instructions", command=self.display_instructions,
                                              font=("Ubuntu Mono", 18))
         self.instructions_button.pack(side="left")
-
+        #Upload Questions
         self.load_button = tk.Button(button_frame, text="Upload Questions", command=self.load_questions_from_file,
                                      font=("Ubuntu Mono", 18))
         self.load_button.pack(side="left")
-
+        #Reset
         self.reset_button = tk.Button(button_frame, text="Reset", command=self.reset, font=("Ubuntu Mono", 18))
         self.reset_button.pack(side="left")
-
-        self.next_button = tk.Button(button_frame, text="Next Question", command=self.next_question,
-                                     font=("Ubuntu Mono", 18))
+        #Next Question
+        self.next_button = tk.Button(
+            button_frame,
+            text="Next Question",
+            command=self.next_question,
+            font=("Ubuntu Mono", 18),
+            bg="#FF5733"  # Replace with your desired color code
+        )
         self.next_button.pack(side="left")
 
-        self.show_answer_button = tk.Button(button_frame, text="Show Answer", command=self.show_answer,
-                                            font=("Ubuntu Mono", 18))
+        #Show Answer
+        self.show_answer_button = tk.Button(
+            button_frame,
+            text="Show Answer",
+            command=self.show_answer,
+            font=("Ubuntu Mono", 18),
+            bg="#7AB7F5"  # Replace with your desired color code
+        )
         self.show_answer_button.pack(side="left")
+
+        # About
+        self.about_button = tk.Button(button_frame, text="About", command=self.about_content,
+                                      font=("Ubuntu Mono", 18))
+        self.about_button.pack(side="left")
 
         self.answer_display = tk.Label(root, text="", font=("Ubuntu Mono", 18), wraplength=900)
         self.answer_display.pack(expand=True)
+
+    def about_content(self):
+        aboutt = """
+         About This Tool:
+         This tool is designed to help you prepare for interviews by providing a random selection of questions and answers.
+         Simply upload an Excel sheet with questions and answers, and start practicing!
+
+         Enjoy your interview preparation!
+         Github Link = https://github.com/mechtester/Random-Question-Generator
+         ** Created By :: Vigneshkumar **
+         """
+        messagebox.showinfo("About", aboutt)
+
+
 
     def display_instructions(self):
         instructions = """
