@@ -1,12 +1,12 @@
 import pandas as pd
 import random
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 
-# Load questions from the second column and answers from the third column of the Excel sheet
-def load_questions_and_answers(file_path):
+# Load questions from the selected sheet in the Excel file
+def load_questions_from_sheet(file_path, selected_sheet):
     try:
-        df = pd.read_excel(file_path)
+        df = pd.read_excel(file_path, sheet_name=selected_sheet)
         s_no = df.iloc[:, 0].tolist()
         questions = df.iloc[:, 1].tolist()
         answers = df.iloc[:, 2].tolist()
@@ -28,62 +28,108 @@ class QuestionApp:
         self.root = root
 
         self.root.title("Random Question")
-        self.root.attributes("-zoomed", True)  # Start in maximized (full-screen) mode
+        self.root.attributes("-zoomed", True)
 
-        self.original_questions = []  # Store the original order of questions
-        self.original_answers = []    # Store the original order of answers
-        self.questions = []           # Store the shuffled questions
-        self.answers = []             # Store the shuffled answers
-        self.current_question_index = -1  # Initialize to -1 to start with the first question
+        self.original_questions = []
+        self.original_answers = []
+        self.questions = []
+        self.answers = []
+        self.current_question_index = -1
         self.remaining_label = tk.Label(root, text="", font=("Ubuntu Mono", 14))
         self.remaining_label.pack()
         self.question_display = tk.Label(root, text=""":::: Interview Preparation ::::
- \U0001F60E""", font=("Ubuntu Mono", 24),
-                                         wraplength=900)
+ \U0001F60E""", font=("Ubuntu Mono", 24), wraplength=900)
         self.question_display.pack(expand=True)
 
-        # Create a frame to hold the buttons
         button_frame = tk.Frame(root)
         button_frame.pack()
 
-        #Instructions
-        self.instructions_button = tk.Button(button_frame, text="Instructions", command=self.display_instructions,
-                                             font=("Ubuntu Mono", 18))
-        self.instructions_button.pack(side="left")
-        #Upload Questions
-        self.load_button = tk.Button(button_frame, text="Upload Questions", command=self.load_questions_from_file,
-                                     font=("Ubuntu Mono", 18))
-        self.load_button.pack(side="left")
-        #Reset
-        self.reset_button = tk.Button(button_frame, text="Reset", command=self.reset, font=("Ubuntu Mono", 18))
-        self.reset_button.pack(side="left")
-        #Next Question
+        # Upload File button
+        self.upload_file_button = tk.Button(
+            button_frame,
+            text="Upload File",
+            command=self.upload_and_populate_sheets,  # Updated command
+            font=("Ubuntu Mono", 18)
+        )
+        self.upload_file_button.pack(side="left")
+
+        # Dropdown menu to select the sheet
+        self.sheet_var = tk.StringVar()
+        self.sheet_dropdown = ttk.Combobox(
+            button_frame,
+            textvariable=self.sheet_var,
+            values=[],
+            state='readonly'
+        )
+        self.sheet_dropdown.pack(side="left")
+
+        # Select Sheet button
+        self.select_sheet_button = tk.Button(
+            button_frame,
+            text="Select Sheet",
+            command=self.load_questions_from_selected_sheet,  # New method for selecting and loading sheet
+            font=("Ubuntu Mono", 18)
+        )
+        self.select_sheet_button.pack(side="left")
+
+        # Next Question
         self.next_button = tk.Button(
             button_frame,
             text="Next Question",
             command=self.next_question,
             font=("Ubuntu Mono", 18),
-            bg="#FF5733"  # Replace with your desired color code
+            bg="#FF5733"
         )
         self.next_button.pack(side="left")
 
-        #Show Answer
+        # Show Answer
         self.show_answer_button = tk.Button(
             button_frame,
             text="Show Answer",
             command=self.show_answer,
             font=("Ubuntu Mono", 18),
-            bg="#7AB7F5"  # Replace with your desired color code
+            bg="#7AB7F5"
         )
         self.show_answer_button.pack(side="left")
 
+        # Reset
+        self.reset_button = tk.Button(
+            button_frame, text="Reset", command=self.reset, font=("Ubuntu Mono", 18)
+        )
+        self.reset_button.pack(side="left")
+
+        # Instructions
+        self.instructions_button = tk.Button(
+            button_frame, text="Instructions", command=self.display_instructions,
+            font=("Ubuntu Mono", 18)
+        )
+        self.instructions_button.pack(side="left")
+
         # About
-        self.about_button = tk.Button(button_frame, text="About", command=self.about_content,
-                                      font=("Ubuntu Mono", 18))
+        self.about_button = tk.Button(
+            button_frame, text="About", command=self.about_content,
+            font=("Ubuntu Mono", 18)
+        )
         self.about_button.pack(side="left")
 
         self.answer_display = tk.Label(root, text="", font=("Ubuntu Mono", 18), wraplength=900)
         self.answer_display.pack(expand=True)
+
+    def upload_and_populate_sheets(self):
+        self.file_path = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xlsx")])
+
+        if self.file_path:
+            excel_file = pd.ExcelFile(self.file_path)
+            self.sheet_dropdown['values'] = excel_file.sheet_names
+            self.sheet_var.set("")  # Clear the selected sheet
+            self.original_questions = []
+            self.original_answers = []
+            self.questions = []
+            self.answers = []
+            self.current_question_index = -1
+            self.display_question()
+        else:
+            messagebox.showinfo("Alert", "Please upload an Excel file.")
 
     def about_content(self):
         aboutt = """
@@ -97,8 +143,6 @@ class QuestionApp:
          """
         messagebox.showinfo("About", aboutt)
 
-
-
     def display_instructions(self):
         instructions = """
         Instructions:
@@ -110,15 +154,28 @@ class QuestionApp:
         """
         messagebox.showinfo("Instructions", instructions)
 
-    def load_questions_from_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xlsx")])
-        if file_path:
-            self.original_questions, self.original_answers = load_questions_and_answers(file_path)
+    def load_questions_from_selected_sheet(self):
+        selected_sheet = self.sheet_var.get()
+
+        if not selected_sheet:
+            messagebox.showinfo("Alert", "Please select a sheet name.")
+            return
+
+        if not self.file_path:
+            messagebox.showinfo("Alert", "Please upload an Excel file first.")
+            return
+
+        # Use the selected sheet name to load questions from the existing Excel file
+        self.original_questions, self.original_answers = load_questions_from_sheet(self.file_path, selected_sheet)
+
+        if self.original_questions:
+            self.answers = []  # Reset the answers list
+            self.answer_display.config(text="")  # Clear the answer display
             self.shuffle_questions_and_answers()
             self.current_question_index = -1
             self.display_question()
         else:
-            messagebox.showinfo("Alert", "Please upload a question file.")
+            messagebox.showinfo("Alert", "No questions found in the selected sheet.")
 
     def shuffle_questions_and_answers(self):
         # Shuffle the questions and answers while maintaining their correspondence
@@ -191,8 +248,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = QuestionApp(root)
     root.mainloop()
-
-
-
-
-
